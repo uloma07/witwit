@@ -1,0 +1,13 @@
+# Provide the mongodb atlas url to connect python to mongodb using pymongo
+mongo:
+  connection: ""
+  raw: "raw_image_data"
+  processed: "processed_image_data"
+
+locations: 'Data/raw/worldcities.csv'
+words: 'Data/raw/places.txt'
+
+flickr:
+  collection: "flickr_data"
+  FLICKR_API_KEY: ''
+  FLICKR_API_SECRET: ''
