@@ -1,35 +1,30 @@
 from pymongo import MongoClient
 import flickrapi
-import csv
 import time
 import yaml
+import datetime
 
 with open('conf.yml', 'r') as configfile:
     config = yaml.safe_load(configfile)
 
 FLICKR_API_KEY = config['flickr']['FLICKR_API_KEY']
 FLICKR_API_SECRET = config['flickr']['FLICKR_API_SECRET']
-words_file = config['words']
+words_file = config['llmwords']
 
 # Initialize the Flickr API client
 flickr = flickrapi.FlickrAPI(FLICKR_API_KEY, FLICKR_API_SECRET, format='parsed-json')
-
-
-# def sanitize_string(input_string):
-#     # Replace newline characters with a space
-#     sanitized_string = input_string.replace('\n', '<newl>')
-#     return sanitized_string
-
 
 # Define a function to search for images based on a location
 def search_images_by_word(word, per_page=10, page=1):
     # Search for photos in the specified location
     photos = flickr.photos.search(
-        accuracy=3,
+        #accuracy=3,
+        min_taken_date=datetime.datetime(1900, 1, 1),
+        #min_upload_date=datetime.datetime(1950, 1, 1),
         text=word.replace('_', ' '),
         media='photos',  # Only retrieve photos
         has_geo=1,  # Filter photos with geographic location data
-        geo_context=1,
+        #geo_context=1,
         per_page=per_page,  # Number of photos per page
         page=page,
         license='1,2,3,4,5,6,7,8,9,10',
@@ -42,7 +37,7 @@ def search_images_by_word(word, per_page=10, page=1):
 
     # Iterate through the photos and retrieve image data
     for photo_info in photo_list:
-        if int(photo_info['context']):
+        #if int(photo_info['context']):
             # Extract additional information
             title = photo_info.get('title')
             latitude = photo_info.get('latitude')
@@ -99,7 +94,6 @@ def get_collection():
 
 def get_keywords():
     # Read words from words file
-    words =[]
     with open(words_file, 'r', newline='', encoding='utf-8') as wordfile:
         words = [line.split('/')[-1].split()[0] for line in wordfile]
 
@@ -109,20 +103,25 @@ if __name__ == '__main__':
     collection = get_collection()
     keywords = get_keywords()
     for word in keywords:
+        print(word)
         page = 1
         while page:
             try:
                 images = search_images_by_word(word, per_page=500, page=page)
                 if images:
-                    collection.insert_many(images, ordered=False)
+                    for image in images:
+                        try:
+                            collection.insert_one(image)
+                        except Exception as e:
+                            continue
                     page += 1
                 else:
                     page = 0
                 # Pause to avoid overloading the API
-                time.sleep(2)
+                time.sleep(0.5)
             except Exception as e:
                 page = 0
-                #print(e)
+                # print(e)
 
 
 

@@ -23,23 +23,19 @@ flickr = flickrapi.FlickrAPI(FLICKR_API_KEY, FLICKR_API_SECRET, format='parsed-j
 
 
 # Define a function to search for images based on a location
-def search_images_by_location(location, radius=5, per_page=10, page=1):
+def search_images_by_location(location, per_page=500, page=1):
     # Search for photos in the specified location
     photos = flickr.photos.search(
-        accuracy=3,  # Accuracy level for location (16 = street level)
-        min_taken_date=datetime.datetime(1950, 1, 1),
-        #min_upload_date=datetime.datetime(1950, 1, 1),
-        #content_type=1,  # Photos only (no screenshots, illustrations, etc.)
+        accuracy=3,
+        min_taken_date=datetime.datetime(1900, 1, 1),
+        #min_upload_date=datetime.datetime(1900, 1, 1),
+        text=location['city_ascii'],
         media='photos',  # Only retrieve photos
         has_geo=1,  # Filter photos with geographic location data
-        geo_context=1,
         per_page=per_page,  # Number of photos per page
         page=page,
-        radius=radius,  # Radius (in km) around the specified location
-        radius_units='km',
-        lat=location['lat'],  # Latitude of the location
-        lon=location['lng'],  # Longitude of the location
-        extras='description, license, date_upload, date_taken, owner_name, icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views, media, path_alias, url_l, url_o'
+        license='1,2,3,4,5,6,7,8,9,10',
+        extras='description, license, date_upload, date_taken, owner_name, original_format, last_update, geo, tags, machine_tags, o_dims, media, url_l, url_o'
     )
 
     # Extract photo information
@@ -48,7 +44,7 @@ def search_images_by_location(location, radius=5, per_page=10, page=1):
 
     # Iterate through the photos and retrieve image data
     for photo_info in photo_list:
-        if int(photo_info['context']):
+        #if int(photo_info['context']):
             # Extract additional information
             title = photo_info.get('title')
             latitude = photo_info.get('latitude')
@@ -142,21 +138,19 @@ if __name__ == '__main__':
             try:
                 images = search_images_by_location(location, radius=19, per_page=500, page=page)
                 if images:
-                    collection.insert_many(images, ordered=False)
+                    for image in images:
+                        try:
+                            collection.insert_one(image)
+                        except Exception as e:
+                            continue
                     page += 1
                 else:
                     page = 0
                 # Pause to avoid overloading the API
-                time.sleep(1)
+                time.sleep(0.3)
             except Exception as e:
-                if images:
-                    for image in images:
-                        try:
-                            collection.insert_one(image, ordered=False)
-                        except Exception as e:
-                            continue
                 page = 0
-                #print(e)
+                # print(e)
 
 
 
