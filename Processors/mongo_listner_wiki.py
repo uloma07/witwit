@@ -23,7 +23,7 @@ def get_in_out_collection():
 
 def process_images(source_collection, model, labels_IO, indoor_collection, outdoor_collection):
     # Select all unprocessed data from the source collection
-    unprocessed_data = source_collection.find({"processed": {"$exists": False}, "description": {"$exists": True}})
+    unprocessed_data = source_collection.find({"processed": {"$exists": False}, "category": {"$exists": True}})
 
     for record in unprocessed_data:
         # Process the data
@@ -35,7 +35,6 @@ def process_images(source_collection, model, labels_IO, indoor_collection, outdo
         except Exception as e:
             print(e)
             try:
-
                 outdoor_collection.insert_one(record)
                 outdoor_collection.update_one({"_id": record["_id"]}, {"$set": {"problematic": True, "source": "wikimedia"}})
             except Exception as e:

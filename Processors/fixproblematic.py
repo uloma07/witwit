@@ -1,6 +1,5 @@
 from pymongo import MongoClient
 import yaml
-import time
 from places365.in_out_mongo import *
 
 

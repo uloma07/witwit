@@ -5,7 +5,6 @@ from places365.in_out_mongo import *
 with open('conf.yml', 'r') as configfile:
     config = yaml.safe_load(configfile)
 
-
 def get_collection():
     # Create a connection using MongoClient.
     client = MongoClient(config['mongo']['connection'])
@@ -62,7 +61,8 @@ def main(limitval=16):
 
     # Select all unprocessed data from the source collection
     while True:
-        unprocessed_data = source_collection.find({"processed": {"$exists": False}}).limit(limitval)
+        #unprocessed_data = source_collection.find({"processed": {"$exists": False}}).limit(limitval)
+        unprocessed_data = source_collection.find({"processed": {"$exists": False}, "category": {"$exists": True}}).limit(limitval)
 
         # Watch the specified collection for changes and process new documents
         number_processed = process_images(unprocessed_data, model, labels_IO, source_collection, indoor_collection, outdoor_collection)
